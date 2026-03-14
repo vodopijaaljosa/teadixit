@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TeaDixit — Game</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+<div class="game-layout">
+  <!-- Header -->
+  <header class="game-header">
+    <span class="logo">TeaDixit</span>
+    <div id="round-badge" class="round-badge" style="display:none">Round 1 / 5</div>
+    <div id="phase-label" class="phase-label"></div>
+    <div id="scoreboard" class="scoreboard"></div>
+  </header>
+
+  <!-- Main -->
+  <div class="game-main">
+    <div id="main-content" class="game-center">
+      <!-- Center content replaced by JS renders -->
+    </div>
+    <aside id="game-sidebar" class="game-sidebar">
+      <!-- Sidebar content replaced by JS renders -->
+    </aside>
+  </div>
+
+  <!-- Persistent hand -->
+  <div id="hand-strip"></div>
+
+  <!-- Footer -->
+  <footer class="game-footer">
+    <span id="footer-hint" class="footer-hint"></span>
+    <div id="footer-actions"></div>
+  </footer>
+</div>
+
+<div id="toast"></div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

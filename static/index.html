@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TeaDixit</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+<div class="lobby-wrap">
+  <div class="lobby-logo">
+    <h1>Tea<span>Dixit</span></h1>
+    <p>A storytelling card game for 3–6 players</p>
+  </div>
+
+  <div class="lobby-panels card">
+    <!-- Create Room -->
+    <div class="panel" id="panel-create">
+      <h2>Create a Room</h2>
+
+      <div class="field">
+        <label>Your name</label>
+        <input id="create-name" class="input" type="text" maxlength="20" placeholder="Enter your name" />
+      </div>
+
+      <div class="field">
+        <label>Number of rounds</label>
+        <div class="rounds-input">
+          <button class="btn btn-secondary" onclick="adjustRounds(-1)">−</button>
+          <input id="rounds" class="input" type="number" min="1" max="20" value="5" readonly />
+          <button class="btn btn-secondary" onclick="adjustRounds(1)">+</button>
+        </div>
+      </div>
+
+      <button class="btn btn-primary" onclick="createRoom()">Create Room</button>
+    </div>
+
+    <div class="panel-divider"></div>
+
+    <!-- Join Room -->
+    <div class="panel" id="panel-join">
+      <h2>Join a Room</h2>
+
+      <div class="field">
+        <label>Your name</label>
+        <input id="join-name" class="input" type="text" maxlength="20" placeholder="Enter your name" />
+      </div>
+
+      <div class="field">
+        <label>Room code</label>
+        <input id="join-code" class="input" type="text" maxlength="4" placeholder="e.g. ABCD" style="text-transform:uppercase;letter-spacing:4px;font-weight:700;" />
+      </div>
+
+      <button class="btn btn-secondary" onclick="joinRoom()">Join Room</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  function adjustRounds(delta) {
+    const el = document.getElementById('rounds');
+    el.value = Math.min(20, Math.max(1, parseInt(el.value) + delta));
+  }
+
+  function showToast(msg, duration = 3000) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), duration);
+  }
+
+  async function createRoom() {
+    const name = document.getElementById('create-name').value.trim();
+    const rounds = parseInt(document.getElementById('rounds').value);
+    if (!name) { showToast('Please enter your name'); return; }
+
+    const res = await fetch('/api/rooms', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ total_rounds: rounds }),
+    });
+    const data = await res.json();
+    // Navigate to game page
+    const playerId = crypto.randomUUID();
+    sessionStorage.setItem('playerId', playerId);
+    sessionStorage.setItem('playerName', name);
+    sessionStorage.setItem('roomCode', data.code);
+    window.location.href = '/game';
+  }
+
+  async function joinRoom() {
+    const name = document.getElementById('join-name').value.trim();
+    const code = document.getElementById('join-code').value.trim().toUpperCase();
+    if (!name) { showToast('Please enter your name'); return; }
+    if (code.length !== 4) { showToast('Room code must be 4 letters'); return; }
+
+    const playerId = crypto.randomUUID();
+    sessionStorage.setItem('playerId', playerId);
+    sessionStorage.setItem('playerName', name);
+    sessionStorage.setItem('roomCode', code);
+    window.location.href = '/game';
+  }
+
+  // Auto-focus
+  document.getElementById('create-name').focus();
+</script>
+</body>
+</html>
