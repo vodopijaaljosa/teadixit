@@ -175,6 +175,20 @@ async def _handle(ws: WebSocket, room_code: str, player_id: str, msg: dict) -> N
             room.host_id = player_id
         await _push_state(room_code)
 
+    elif action == "leave":
+        room.remove_player(player_id)
+        connections.get(room_code, {}).pop(player_id, None)
+        # Reassign host if the host left
+        if room.host_id == player_id and room.players:
+            room.host_id = room.players[0].id
+        # Clean up empty rooms
+        if not room.players:
+            rooms.pop(room_code, None)
+            connections.pop(room_code, None)
+            return
+        await _push_state(room_code)
+        return
+
     elif action == "start_game":
         if player_id != room.host_id:
             raise ValueError("Only the host can start the game")

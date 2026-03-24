@@ -25,6 +25,8 @@ let pickedCardId = null;  // card selected in hand before confirming
 let roundEndCountdown = null;  // interval id for round-end countdown
 let roundEndSecondsLeft = 0;
 let roundEndForRound = -1;    // which round the countdown was started for
+let handCollapsed = false;
+let lastPhase = null;
 
 // ------------------------------------------------------------------
 // WebSocket
@@ -83,6 +85,16 @@ function render() {
     roundEndCountdown = null;
   }
 
+  // Auto-collapse hand during voting, auto-expand on new round
+  if (state.phase !== lastPhase) {
+    if (state.phase === 'voting') {
+      handCollapsed = true;
+    } else if (state.phase === 'storyteller_picks' && lastPhase !== null) {
+      handCollapsed = false;
+    }
+    lastPhase = state.phase;
+  }
+
   switch (state.phase) {
     case 'lobby':             renderLobby(main, sidebar, footer, hint);             break;
     case 'storyteller_picks': renderStorytellerPicks(main, sidebar, footer, hint);  break;
@@ -120,8 +132,11 @@ function renderPersistentHand() {
 
   strip.innerHTML = `
     <div class="hand-section">
-      <div class="hand-title">Your hand</div>
-      <div class="hand-cards">${cards.join('')}</div>
+      <div class="hand-title">
+        Your hand (${hand.length})
+        <button class="hand-toggle-btn" onclick="toggleHand()">${handCollapsed ? '&#x25B2; Show' : '&#x25BC; Hide'}</button>
+      </div>
+      ${handCollapsed ? '' : `<div class="hand-cards">${cards.join('')}</div>`}
     </div>
   `;
 
@@ -187,7 +202,7 @@ function renderLobby(main, sidebar, footer, hint) {
     <div class="waiting-room">
       <h2>Waiting for players…</h2>
       <div class="room-code-display">${escHtml(state.code)}</div>
-      <p>Share this code with friends · ${state.players.length}/6 players</p>
+      <p>Share this code with friends · ${state.players.length}/10 players</p>
       <div class="player-chips">
         ${state.players.map(p => `
           <div class="player-chip ${p.id === state.host_id ? 'host' : ''}">
@@ -200,7 +215,7 @@ function renderLobby(main, sidebar, footer, hint) {
   `;
 
   sidebar.innerHTML = `
-    <h3>Players (${state.players.length}/6)</h3>
+    <h3>Players (${state.players.length}/10)</h3>
     <div class="waiting-list">
       ${state.players.map(p => `
         <div class="waiting-player">
@@ -212,9 +227,10 @@ function renderLobby(main, sidebar, footer, hint) {
   `;
 
   hint.textContent = isHost ? 'You are the host' : `Waiting for host (${ownerName()}) to start…`;
-  footer.innerHTML = isHost
-    ? `<button class="btn btn-primary" onclick="startGame()" ${canStart ? '' : 'disabled'}>Start Game</button>`
-    : '';
+  footer.innerHTML = `
+    <button class="btn btn-secondary" onclick="leaveRoom()">Leave Room</button>
+    ${isHost ? `<button class="btn btn-primary" onclick="startGame()" ${canStart ? '' : 'disabled'}>Start Game</button>` : ''}
+  `;
 }
 
 // ------------------------------------------------------------------
@@ -227,6 +243,7 @@ function renderStorytellerPicks(main, sidebar, footer, hint) {
   if (amStoryteller) {
     hint.textContent = 'Pick a card from your hand, then enter your clue.';
     main.innerHTML = '';
+    footer.innerHTML = '';
     sidebar.innerHTML = `
       <div class="clue-form" id="clue-form" style="display:none">
         <h3>Your clue</h3>
@@ -500,10 +517,14 @@ function attachTableVoteListeners() {
 
 function renderWaitingList() {
   // Show which non-storytellers have submitted/voted based on phase
+  const isSubmitPhase = state.phase === 'others_submit';
+  const isVotePhase = state.phase === 'voting';
   return `<div class="waiting-list">
     ${state.players.filter(p => p.id !== state.storyteller_id).map(p => {
-      return `<div class="waiting-player">
+      const done = isSubmitPhase ? p.has_submitted : isVotePhase ? p.has_voted : false;
+      return `<div class="waiting-player ${done ? 'done' : 'pending'}">
         <div class="dot"></div> ${escHtml(p.name)}
+        <span class="status-label">${done ? 'Done' : 'Waiting…'}</span>
       </div>`;
     }).join('')}
   </div>`;
@@ -519,13 +540,40 @@ function renderCardVisual(card, voteCount) {
   return `<div class="dixit-card" style="${bg}">
     ${!card.image ? `<span>${escHtml(card.label)}</span>` : ''}
     ${voteCount !== undefined ? `<span class="card-vote-count">${voteCount} vote${voteCount !== 1 ? 's' : ''}</span>` : ''}
+    ${card.image ? `<button class="card-zoom-btn" onclick="event.stopPropagation(); openCardModal('${card.image}')">&#x1f50d;</button>` : ''}
   </div>`;
 }
 
 // ------------------------------------------------------------------
 // Actions
 // ------------------------------------------------------------------
+function openCardModal(imageUrl) {
+  const modal = document.getElementById('card-modal');
+  const img = document.getElementById('card-modal-img');
+  img.src = imageUrl;
+  modal.classList.add('open');
+}
+
+function closeCardModal() {
+  document.getElementById('card-modal').classList.remove('open');
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeCardModal();
+});
+
+function toggleHand() {
+  handCollapsed = !handCollapsed;
+  renderPersistentHand();
+}
+
 function startGame() { send({ action: 'start_game' }); }
+
+function leaveRoom() {
+  send({ action: 'leave' });
+  sessionStorage.clear();
+  window.location.href = '/';
+}
 
 function submitClue() {
   const clue = document.getElementById('clue-input')?.value.trim();

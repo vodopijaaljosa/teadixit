@@ -7,7 +7,7 @@ Designed so a real image URL can be swapped in later (just add an "image" key).
 import random
 
 # 84 cards like the real Dixit deck
-DECK_SIZE = 84
+DECK_SIZE = 1000
 
 PALETTE = [
     "#e07b54", "#e0a854", "#e0d454", "#7be07b",
@@ -25,7 +25,8 @@ def build_deck() -> list[dict]:
             "id": i,
             "color": color,
             "label": f"Card {i + 1}",
-            "image": f"https://picsum.photos/id/{i + 10}/300/400",
+            "image": f"https://picsum.photos/300/400?random={i}",
+            # "image": f"https://image.pollinations.ai/prompt/surreal%20dreamlike%20dixit%20board%20game%20illustration%20fantasy%20art?width=300&height=400&seed={i}&nologo=true",
         })
     return cards
 

@@ -15,7 +15,7 @@ from deck import shuffled_deck
 
 HAND_SIZE = 6
 MIN_PLAYERS = 3
-MAX_PLAYERS = 6
+MAX_PLAYERS = 10
 DEFAULT_ROUNDS = 5
 
 
@@ -41,7 +41,13 @@ class Player:
 
     def to_public(self) -> dict:
         """Safe representation to broadcast (no hand contents)."""
-        return {"id": self.id, "name": self.name, "score": self.score}
+        return {
+            "id": self.id,
+            "name": self.name,
+            "score": self.score,
+            "has_submitted": self.submitted_card is not None,
+            "has_voted": self.voted_for is not None,
+        }
 
 
 @dataclass
