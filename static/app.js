@@ -540,7 +540,7 @@ function renderCardVisual(card, voteCount) {
   return `<div class="dixit-card" style="${bg}">
     ${!card.image ? `<span>${escHtml(card.label)}</span>` : ''}
     ${voteCount !== undefined ? `<span class="card-vote-count">${voteCount} vote${voteCount !== 1 ? 's' : ''}</span>` : ''}
-    ${card.image ? `<button class="card-zoom-btn" onclick="event.stopPropagation(); openCardModal('${card.image}')">&#x1f50d;</button>` : ''}
+    ${card.image ? `<button class="card-zoom-btn" onclick="event.stopPropagation(); openCardModal('${card.image.replace('/300/400', '/900/1200')}')">&#x1f50d;</button>` : ''}
   </div>`;
 }
 

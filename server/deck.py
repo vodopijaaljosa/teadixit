@@ -25,7 +25,7 @@ def build_deck() -> list[dict]:
             "id": i,
             "color": color,
             "label": f"Card {i + 1}",
-            "image": f"https://picsum.photos/300/400?random={i}",
+            "image": f"https://picsum.photos/seed/teadixit{i}/300/400",
             # "image": f"https://image.pollinations.ai/prompt/surreal%20dreamlike%20dixit%20board%20game%20illustration%20fantasy%20art?width=300&height=400&seed={i}&nologo=true",
         })
     return cards
